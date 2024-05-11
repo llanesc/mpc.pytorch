@@ -463,9 +463,9 @@ More details: https://github.com/locuslab/mpc.pytorch/issues/12
             for t in range(self.T):
                 tau_t = tau[t]
                 if self.slew_rate_penalty is not None:
-                    cost = Cf(tau_t) + (slew_penalty[t-1] if t > 0 else 0)
+                    cost = Cf(tau_t, t) + (slew_penalty[t-1] if t > 0 else 0)
                 else:
-                    cost = Cf(tau_t)
+                    cost = Cf(tau_t, t)
 
                 grad = torch.autograd.grad(cost.sum(), tau_t,
                                            create_graph=True, retain_graph=True)[0]
@@ -499,25 +499,25 @@ More details: https://github.com/locuslab/mpc.pytorch/issues/12
 
             # This inefficiently calls dynamics again, but is worth it because
             # we can efficiently compute grad_input for every time step at once.
-            _new_x = dynamics(_x, _u)
+            # _new_x = dynamics(_x, _u)
 
             # This check is a little expensive and should only be done if
             # modifying this code.
             # assert torch.abs(_new_x.data - torch.cat(x[1:])).max() <= 1e-6
 
             if not diff:
-                _new_x = _new_x.data
+                # _new_x = _new_x.data
                 _x = _x.data
                 _u = _u.data
 
-            R, S = dynamics.grad_input(_x, _u)
+            A, B, f = dynamics.grad_input(_x, _u)
 
-            f = _new_x - util.bmv(R, _x) - util.bmv(S, _u)
+            # f = _new_x - util.bmv(A, _x) - util.bmv(B, _u)
             f = f.view(self.T-1, n_batch, self.n_state)
 
-            R = R.contiguous().view(self.T-1, n_batch, self.n_state, self.n_state)
-            S = S.contiguous().view(self.T-1, n_batch, self.n_state, self.n_ctrl)
-            F = torch.cat((R, S), 3)
+            A = A.contiguous().view(self.T-1, n_batch, self.n_state, self.n_state)
+            B = B.contiguous().view(self.T-1, n_batch, self.n_state, self.n_ctrl)
+            F = torch.cat((A, B), 3)
 
             if not diff:
                 F, f = list(map(Variable, [F, f]))

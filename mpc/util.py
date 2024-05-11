@@ -146,7 +146,7 @@ def get_cost(T, u, cost, dynamics=None, x_init=None, x=None):
         if isinstance(cost, QuadCost):
             obj = 0.5*bquad(xut, C[t]) + bdot(xut, c[t])
         else:
-            obj = cost(xut)
+            obj = cost(xut, t)
         objs.append(obj)
     objs = torch.stack(objs, dim=0)
     total_obj = torch.sum(objs, dim=0)

@@ -231,7 +231,7 @@ def LQRStep(n_state,
                     C, c = true_cost.C, true_cost.c
                     obj = 0.5*util.bquad(new_xut, C[t]) + util.bdot(new_xut, c[t])
                 else:
-                    obj = true_cost(new_xut)
+                    obj = true_cost(new_xut, t)
 
                 objs.append(obj)
 
@@ -241,7 +241,9 @@ def LQRStep(n_state,
             new_u = torch.stack(new_u)
             new_x = torch.stack(new_x)
             if full_du_norm is None:
-                full_du_norm = (u-new_u).transpose(1,2).contiguous().view(
+                # full_du_norm = (u-new_u).transpose(1,2).contiguous().view(
+                #     n_batch, -1).norm(2, 1)
+                full_du_norm = (u-new_u).transpose(0,1).contiguous().view(
                     n_batch, -1).norm(2, 1)
 
             alphas[current_cost > old_cost] *= linesearch_decay
